@@ -18,3 +18,4 @@ Automatically sends **embed messages** with current and upcoming deals.
 ```bash
 git clone https://github.com/YOUR_USERNAME/discord-free-deals-bot.git
 cd discord-free-deals-bot
+# discord-free-deals-bot
