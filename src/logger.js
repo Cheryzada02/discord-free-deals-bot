@@ -31,7 +31,7 @@ export async function sendLog(client, message, type = 'info') {
     }
 
     const embed = new EmbedBuilder()
-      .setTitle('📄 Bot Log')
+      .setTitle('Free Games Log')
       .setDescription(message)
       .setColor(color)
       .setTimestamp();
