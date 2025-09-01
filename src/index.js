@@ -25,6 +25,12 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
 
+// --- AUTO PING PARA MANTENER EL BOT ACTIVO ---
+setInterval(() => {
+  require('http').get(`http://localhost:${PORT}`);
+  console.log('🔄 Auto ping al servidor para mantener activo');
+}, 5 * 60 * 1000); // cada 5 minutos
+
 // --- LOGICA DEL BOT DE DISCORD ---
 client.once('ready', async () => {
   console.log(`✅ Bot listo: ${client.user.tag}`);
