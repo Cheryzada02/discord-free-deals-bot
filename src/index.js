@@ -1,11 +1,35 @@
-const { client } = require('./discordClient');
-const { startScheduler, checkAll } = require('./scheduler');
+import { client } from './discordClient.js';
+import { startScheduler, checkAll } from './scheduler.js';
+import fs from 'fs';
+import express from 'express';
+import config from './config.js';
 
-// Esperamos a que el cliente esté listo
+// --- CREAR seen.json SI NO EXISTE ---
+const dataDir = './data';
+const seenFile = `${dataDir}/seen.json`;
+
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+if (!fs.existsSync(seenFile)) {
+  fs.writeFileSync(seenFile, JSON.stringify({ epic: [], steam: [] }, null, 2));
+  console.log('✅ Archivo seen.json creado automáticamente');
+}
+
+// --- SERVIDOR HTTP MÍNIMO PARA RENDER ---
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+app.get('/', (req, res) => res.send('✅ Bot activo en Render'));
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
+});
+
+// --- LOGICA DEL BOT DE DISCORD ---
 client.once('ready', async () => {
   console.log(`✅ Bot listo: ${client.user.tag}`);
 
-  // Cambiar presencia a "Viendo ofertas gratis"
+  // Cambiar presencia
   client.user.setPresence({
     activities: [{ name: 'ofertas gratis', type: 3 }], // 3 = Watching
     status: 'online'
@@ -22,7 +46,6 @@ client.once('ready', async () => {
 });
 
 // Login del bot
-const config = require('./config');
 client.login(config.discordToken).catch(err => {
   console.error('Error al login:', err.message);
 });
