@@ -2,8 +2,9 @@ import { client } from './discordClient.js';
 import { startScheduler, checkAll } from './scheduler.js';
 import fs from 'fs';
 import express from 'express';
+import fetch from 'node-fetch';
 import config from './config.js';
-import { sendLog } from './logger.js'; // Para enviar embeds a Discord
+import { logToDiscord } from './logger.js';
 
 // --- CREAR seen.json SI NO EXISTE ---
 const dataDir = './data';
@@ -26,31 +27,46 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
 
-// --- AUTO PING PARA MANTENER EL BOT ACTIVO ---
+// --- AUTO PING PARA MANTENER ACTIVO EL BOT ---
+const SELF_URL = "https://discord-free-deals-bot.onrender.com";
+
 setInterval(async () => {
-  require('http').get(`http://localhost:${PORT}`);
-  await sendLog(client, '🔄 Auto ping al servidor para mantener activo', 'info');
+  try {
+    const res = await fetch(SELF_URL);
+    if (res.ok) {
+      const msg = `🔄 Auto-ping exitoso a ${SELF_URL} (${res.status})`;
+      console.log(msg);
+      await logToDiscord(msg, 'info');
+    } else {
+      const msg = `⚠️ Auto-ping falló (${res.status})`;
+      console.error(msg);
+      await logToDiscord(msg, 'error');
+    }
+  } catch (err) {
+    const msg = `❌ Error en auto-ping: ${err.message}`;
+    console.error(msg);
+    await logToDiscord(msg, 'error');
+  }
 }, 5 * 60 * 1000); // cada 5 minutos
 
 // --- LOGICA DEL BOT DE DISCORD ---
 client.once('ready', async () => {
   console.log(`✅ Bot listo: ${client.user.tag}`);
-  await sendLog(client, `✅ Bot listo: ${client.user.tag}`, 'success');
+  await logToDiscord(`✅ Bot iniciado como **${client.user.tag}**`, 'success');
 
   // Cambiar presencia
   client.user.setPresence({
-    activities: [{ name: 'Juegos Gratis por ti', type: 3 }], // 3 = Watching
+    activities: [{ name: 'ofertas gratis', type: 3 }], // 3 = Watching
     status: 'online'
   });
 
   try {
     console.log('[Startup] Comprobando ofertas inmediatamente...');
-    await sendLog(client, '[Startup] Comprobando ofertas inmediatamente...', 'info');
     await checkAll(client);
-    await sendLog(client, '[Startup] Comprobación inicial de ofertas completada', 'success');
+    await logToDiscord('📦 Chequeo inicial de ofertas completado', 'info');
   } catch (err) {
     console.error('Error en el chequeo inicial:', err.message);
-    await sendLog(client, `❌ Error en el chequeo inicial: ${err.message}`, 'error');
+    await logToDiscord(`❌ Error en chequeo inicial: ${err.message}`, 'error');
   }
 
   startScheduler(client);
@@ -59,5 +75,5 @@ client.once('ready', async () => {
 // Login del bot
 client.login(config.discordToken).catch(async (err) => {
   console.error('Error al login:', err.message);
-  await sendLog(client, `❌ Error al login: ${err.message}`, 'error');
+  await logToDiscord(`❌ Error al login: ${err.message}`, 'error');
 });
