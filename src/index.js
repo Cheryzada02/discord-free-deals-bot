@@ -3,7 +3,7 @@ import { startScheduler, checkAll } from './scheduler.js';
 import fs from 'fs';
 import express from 'express';
 import config from './config.js';
-import { sendLog } from './logger.js'; // Nueva función para enviar logs
+import { sendLog } from './logger.js'; // Para enviar embeds a Discord
 
 // --- CREAR seen.json SI NO EXISTE ---
 const dataDir = './data';
@@ -27,30 +27,30 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 // --- AUTO PING PARA MANTENER EL BOT ACTIVO ---
-setInterval(() => {
+setInterval(async () => {
   require('http').get(`http://localhost:${PORT}`);
-  sendLog(client, '🔄 Auto ping al servidor para mantener activo');
+  await sendLog(client, '🔄 Auto ping al servidor para mantener activo', 'info');
 }, 5 * 60 * 1000); // cada 5 minutos
 
 // --- LOGICA DEL BOT DE DISCORD ---
 client.once('ready', async () => {
   console.log(`✅ Bot listo: ${client.user.tag}`);
-  await sendLog(client, `✅ Bot listo: ${client.user.tag}`);
+  await sendLog(client, `✅ Bot listo: ${client.user.tag}`, 'success');
 
   // Cambiar presencia
   client.user.setPresence({
-    activities: [{ name: 'ofertas gratis', type: 3 }], // 3 = Watching
+    activities: [{ name: 'Juegos Gratis por ti', type: 3 }], // 3 = Watching
     status: 'online'
   });
 
   try {
     console.log('[Startup] Comprobando ofertas inmediatamente...');
-    await sendLog(client, '[Startup] Comprobando ofertas inmediatamente...');
+    await sendLog(client, '[Startup] Comprobando ofertas inmediatamente...', 'info');
     await checkAll(client);
-    await sendLog(client, '[Startup] Comprobación inicial de ofertas completada');
+    await sendLog(client, '[Startup] Comprobación inicial de ofertas completada', 'success');
   } catch (err) {
     console.error('Error en el chequeo inicial:', err.message);
-    await sendLog(client, `❌ Error en el chequeo inicial: ${err.message}`);
+    await sendLog(client, `❌ Error en el chequeo inicial: ${err.message}`, 'error');
   }
 
   startScheduler(client);
@@ -59,5 +59,5 @@ client.once('ready', async () => {
 // Login del bot
 client.login(config.discordToken).catch(async (err) => {
   console.error('Error al login:', err.message);
-  await sendLog(client, `❌ Error al login: ${err.message}`);
+  await sendLog(client, `❌ Error al login: ${err.message}`, 'error');
 });
