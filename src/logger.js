@@ -1,5 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import config from './config.js';
+import { config } from './config.js'; // <-- import named
 
 export async function logToDiscord(client, message, type = 'info') {
   try {

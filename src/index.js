@@ -3,7 +3,7 @@ import { startScheduler, checkAll } from './scheduler.js';
 import fs from 'fs';
 import express from 'express';
 import fetch from 'node-fetch';
-import config from './config.js';
+import { config } from './config.js';
 import { logToDiscord } from './logger.js';
 
 // --- CREAR seen.json SI NO EXISTE ---
@@ -23,7 +23,7 @@ const PORT = process.env.PORT || 10000;
 app.get('/', (req, res) => res.send('✅ Bot activo en Render'));
 app.listen(PORT, '0.0.0.0', () => console.log(`Servidor escuchando en puerto ${PORT}`));
 
-// --- AUTO PING PARA MANTENER ACTIVO EL BOT ---
+// --- AUTO PING ---
 const SELF_URL = "https://discord-free-deals-bot.onrender.com";
 setInterval(async () => {
   try {
@@ -44,13 +44,13 @@ setInterval(async () => {
   }
 }, 5 * 60 * 1000); // cada 5 minutos
 
-// --- LOGICA DEL BOT DE DISCORD ---
+// --- BOT DISCORD ---
 client.once('ready', async () => {
   console.log(`✅ Bot listo: ${client.user.tag}`);
   await logToDiscord(client, `✅ Bot iniciado como **${client.user.tag}**`, 'success');
 
   client.user.setPresence({
-    activities: [{ name: 'ofertas gratis', type: 3 }], // Watching
+    activities: [{ name: 'ofertas gratis', type: 3 }],
     status: 'online'
   });
 
