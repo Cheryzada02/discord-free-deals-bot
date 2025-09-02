@@ -1,10 +1,11 @@
 import { EmbedBuilder } from 'discord.js';
-import { config } from './config.js'; // <-- import named
+import { config } from './config.js';
+import { client } from './discordClient.js';
 
-export async function logToDiscord(client, message, type = 'info') {
+export async function logToDiscord(message, type = 'info') {
   try {
     if (!config.logChannelId) {
-      console.log('⚠️ LOG_CHANNEL_ID no definido. Mensaje:', message);
+      console.log('⚠️ LOG_CHANNEL_ID no definido. Mensaje de log:', message);
       return;
     }
 
@@ -16,14 +17,14 @@ export async function logToDiscord(client, message, type = 'info') {
 
     let color;
     switch (type) {
-      case 'success': color = 0x57f287; break;
-      case 'error':   color = 0xed4245; break;
-      case 'warn':    color = 0xedb324; break;
-      default:        color = 0x7289da;
+      case 'success': color = 0x57f287; break; // verde
+      case 'error':   color = 0xed4245; break; // rojo
+      case 'warn':    color = 0xedb324; break; // amarillo
+      default:        color = 0x7289da;        // azul Discord
     }
 
     const embed = new EmbedBuilder()
-      .setTitle('Free Games Log')
+      .setTitle('🎮 Free Games Log')
       .setDescription(message)
       .setColor(color)
       .setTimestamp();
