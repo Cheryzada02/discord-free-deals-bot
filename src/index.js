@@ -11,7 +11,6 @@ const dataDir = './data';
 const seenFile = `${dataDir}/seen.json`;
 
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
 if (!fs.existsSync(seenFile)) {
   fs.writeFileSync(seenFile, JSON.stringify({ epic: [], steam: [] }, null, 2));
   console.log('✅ Archivo seen.json creado automáticamente');
@@ -22,13 +21,10 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 app.get('/', (req, res) => res.send('✅ Bot activo en Render'));
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`Servidor escuchando en puerto ${PORT}`));
 
 // --- AUTO PING PARA MANTENER ACTIVO EL BOT ---
 const SELF_URL = "https://discord-free-deals-bot.onrender.com";
-
 setInterval(async () => {
   try {
     const res = await fetch(SELF_URL);
@@ -53,9 +49,8 @@ client.once('ready', async () => {
   console.log(`✅ Bot listo: ${client.user.tag}`);
   await logToDiscord(client, `✅ Bot iniciado como **${client.user.tag}**`, 'success');
 
-  // Cambiar presencia
   client.user.setPresence({
-    activities: [{ name: 'ofertas gratis', type: 3 }], // 3 = Watching
+    activities: [{ name: 'ofertas gratis', type: 3 }], // Watching
     status: 'online'
   });
 
@@ -64,14 +59,13 @@ client.once('ready', async () => {
     await checkAll(client);
     await logToDiscord(client, '📦 Chequeo inicial de ofertas completado', 'info');
   } catch (err) {
-    console.error('❌ Error en el chequeo inicial:', err.message);
+    console.error('❌ Error en chequeo inicial:', err.message);
     await logToDiscord(client, `❌ Error en chequeo inicial: ${err.message}`, 'error');
   }
 
   startScheduler(client);
 });
 
-// Login del bot
 client.login(config.discordToken).catch(async (err) => {
   console.error('❌ Error al login:', err.message);
   await logToDiscord(client, `❌ Error al login: ${err.message}`, 'error');

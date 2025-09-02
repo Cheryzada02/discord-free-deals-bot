@@ -2,8 +2,8 @@
   "name": "discord-free-deals-bot",
   "version": "1.0.0",
   "description": "Bot que avisa de juegos gratis y ofertas en Epic y Steam",
-  "type": "module",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "start": "node src/index.js"
   },
