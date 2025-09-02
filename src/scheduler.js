@@ -1,16 +1,17 @@
-const cron = require('node-cron');
-const storage = require('./storage');
-const { fetchEpicPromotions } = require('./services/epicService');
-const { fetchSteamDiscounts } = require('./services/steamService');
-const { buildEpicEmbed, buildSteamEmbed, sendEmbedToChannel } = require('./discordUtils');
-const config = require('./config');
+// src/scheduler.js
+import cron from 'node-cron';
+import { add } from './storage.js';
+import { fetchEpicPromotions } from './services/epicService.js';
+import { fetchSteamDiscounts } from './services/steamService.js';
+import { buildEpicEmbed, buildSteamEmbed, sendEmbedToChannel } from './discordUtils.js';
+import { config } from './config.js';
 
-async function checkAll(client) {
+export async function checkAll(client) {
   console.log('[scheduler] Comprobando ofertas...');
 
   const epicItems = await fetchEpicPromotions();
   for (const item of epicItems) {
-    const added = storage.add('epic', item.id);
+    const added = add('epic', item.id);
     if (added) {
       const embed = buildEpicEmbed(item);
       await sendEmbedToChannel(client, embed);
@@ -20,7 +21,7 @@ async function checkAll(client) {
 
   const steamItems = await fetchSteamDiscounts(50);
   for (const item of steamItems) {
-    const added = storage.add('steam', item.id);
+    const added = add('steam', item.id);
     if (added) {
       const embed = buildSteamEmbed(item);
       await sendEmbedToChannel(client, embed);
@@ -29,10 +30,8 @@ async function checkAll(client) {
   }
 }
 
-function startScheduler(client) {
+export function startScheduler(client) {
   cron.schedule(config.cronExpr, () => {
     checkAll(client).catch(err => console.error('Error en cron:', err.message));
   });
 }
-
-module.exports = { startScheduler, checkAll };
