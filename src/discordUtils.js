@@ -1,43 +1,34 @@
-const { EmbedBuilder } = require('discord.js');
-const config = require('./config');
+// src/discordUtils.js
+import { EmbedBuilder } from 'discord.js';
+import { config } from './config.js';
 
-function buildEpicEmbed(item) {
-  const embed = new EmbedBuilder()
+// Construye embed para Epic
+export function buildEpicEmbed(item) {
+  return new EmbedBuilder()
     .setTitle(item.title)
     .setURL(item.url)
-    .setTimestamp(new Date(item.startDate || Date.now()))
-    .setFooter({ text: 'Epic Games' });
-
-  if (item.type === 'free') {
-    embed.setDescription(`🎁 ¡Gratis hasta: ${new Date(item.endDate).toLocaleString()}!`);
-  }
-  if (item.type === 'upcoming') {
-    embed.setDescription(`📅 Próximo gratis desde: ${new Date(item.startDate).toLocaleString()}`);
-  }
-  if (item.image) embed.setImage(item.image);
-
-  return embed;
+    .setDescription(item.description || 'Gratis por tiempo limitado')
+    .setColor(0x57f287)
+    .setImage(item.thumbnail);
 }
 
-function buildSteamEmbed(item) {
-  const embed = new EmbedBuilder()
+// Construye embed para Steam
+export function buildSteamEmbed(item) {
+  return new EmbedBuilder()
     .setTitle(item.title)
     .setURL(item.url)
-    .setDescription(item.discountPercent ? `🔖 ${item.discountPercent} — ${item.finalPrice}` : `${item.finalPrice || ''}`)
-    .setFooter({ text: 'Steam' })
-    .setTimestamp();
-
-  if (item.image) embed.setThumbnail(item.image);
-
-  return embed;
+    .setDescription(item.description || `Descuento: ${item.discountPercent}%`)
+    .setColor(0x1e90ff)
+    .setImage(item.thumbnail);
 }
 
-// Ahora recibe client como parámetro
-async function sendEmbedToChannel(client, embed) {
-  if (!client || !client.isReady()) return;
-  const channel = await client.channels.fetch(config.channelId).catch(() => null);
-  if (!channel) return;
-  await channel.send({ embeds: [embed] });
+// Envía embed al canal principal
+export async function sendEmbedToChannel(client, embed) {
+  try {
+    const channel = await client.channels.fetch(config.channelId);
+    if (!channel) throw new Error('Canal principal no encontrado');
+    await channel.send({ embeds: [embed] });
+  } catch (err) {
+    console.error('Error enviando embed:', err.message);
+  }
 }
-
-module.exports = { buildEpicEmbed, buildSteamEmbed, sendEmbedToChannel };
