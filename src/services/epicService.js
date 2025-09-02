@@ -1,7 +1,8 @@
-const axios = require('axios');
-const config = require('../config');
+// src/services/epicService.js
+import axios from 'axios';
+import { config } from '../config.js';
 
-async function fetchEpicPromotions() {
+export async function fetchEpicPromotions() {
   const url = 'https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions';
   try {
     const res = await axios.get(url, { headers: { 'User-Agent': config.userAgent } });
@@ -44,5 +45,3 @@ async function fetchEpicPromotions() {
     return [];
   }
 }
-
-module.exports = { fetchEpicPromotions };

@@ -1,8 +1,9 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const config = require('../config');
+// src/services/steamService.js
+import axios from 'axios';
+import cheerio from 'cheerio';
+import { config } from '../config.js';
 
-async function fetchSteamDiscounts(count = 50) {
+export async function fetchSteamDiscounts(count = 50) {
   try {
     const url = `https://store.steampowered.com/search/results/?query&start=0&count=${count}&filter=discounts&format=json`;
     const res = await axios.get(url, { headers: { 'User-Agent': config.userAgent } });
@@ -38,5 +39,3 @@ async function fetchSteamDiscounts(count = 50) {
     return [];
   }
 }
-
-module.exports = { fetchSteamDiscounts };
