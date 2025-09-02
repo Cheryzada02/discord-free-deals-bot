@@ -1,6 +1,5 @@
-// src/services/steamService.js
 import axios from 'axios';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { config } from '../config.js';
 
 export async function fetchSteamDiscounts(count = 50) {
@@ -9,7 +8,7 @@ export async function fetchSteamDiscounts(count = 50) {
     const res = await axios.get(url, { headers: { 'User-Agent': config.userAgent } });
     const html = res.data.results_html || '';
 
-    const $ = cheerio.load(html);
+    const $ = load(html);
     const items = [];
 
     $('.search_result_row').each((i, el) => {
