@@ -36,43 +36,42 @@ setInterval(async () => {
     if (res.ok) {
       const msg = `🔄 Auto-ping exitoso a ${SELF_URL} (${res.status})`;
       console.log(msg);
-      await logToDiscord(msg, 'info');
+      await logToDiscord(client, msg, 'info');
     } else {
       const msg = `⚠️ Auto-ping falló (${res.status})`;
       console.error(msg);
-      await logToDiscord(msg, 'error');
+      await logToDiscord(client, msg, 'error');
     }
   } catch (err) {
     const msg = `❌ Error en auto-ping: ${err.message}`;
     console.error(msg);
-    await logToDiscord(msg, 'error');
+    await logToDiscord(client, msg, 'error');
   }
-}, 5 * 60 * 1000); // cada 5 minutos
+}, 5 * 60 * 1000);
 
 // --- LOGICA DEL BOT DE DISCORD ---
 client.once('ready', async () => {
   console.log(`✅ Bot listo: ${client.user.tag}`);
-  await logToDiscord(`✅ Bot iniciado como **${client.user.tag}**`, 'success');
+  await logToDiscord(client, `✅ Bot iniciado como **${client.user.tag}**`, 'success');
 
   client.user.setPresence({
-    activities: [{ name: 'ofertas gratis', type: 3 }], // 3 = Watching
+    activities: [{ name: 'ofertas gratis', type: 3 }],
     status: 'online'
   });
 
   try {
     console.log('[Startup] Comprobando ofertas inmediatamente...');
     await checkAll(client);
-    await logToDiscord('📦 Chequeo inicial de ofertas completado', 'info');
+    await logToDiscord(client, '📦 Chequeo inicial de ofertas completado', 'info');
   } catch (err) {
     console.error('Error en el chequeo inicial:', err.message);
-    await logToDiscord(`❌ Error en chequeo inicial: ${err.message}`, 'error');
+    await logToDiscord(client, `❌ Error en chequeo inicial: ${err.message}`, 'error');
   }
 
   startScheduler(client);
 });
 
-// Login del bot
 client.login(config.discordToken).catch(async (err) => {
   console.error('Error al login:', err.message);
-  await logToDiscord(`❌ Error al login: ${err.message}`, 'error');
+  await logToDiscord(client, `❌ Error al login: ${err.message}`, 'error');
 });
