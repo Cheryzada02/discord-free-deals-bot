@@ -1,43 +1,35 @@
+// src/logger.js
 import { EmbedBuilder } from 'discord.js';
 import { config } from './config.js';
 
 export async function logToDiscord(client, message, type = 'info') {
+  const prefix = type.toUpperCase().padEnd(7);
+  console.log(`[${prefix}] ${message}`);
+
+  if (!config.logChannelId) return;
+  if (!client.isReady()) return;
+
   try {
-    if (!config.logChannelId) {
-      console.log('⚠️ LOG_CHANNEL_ID no definido. Mensaje de log:', message);
-      return;
-    }
+    const channel =
+      client.channels.cache.get(config.logChannelId) ||
+      (await client.channels.fetch(config.logChannelId));
 
-    const channel = await client.channels.fetch(config.logChannelId);
-    if (!channel) {
-      console.log('⚠️ Canal de logs no encontrado. Mensaje:', message);
-      return;
-    }
+    if (!channel) return;
 
-    let color;
-    switch (type) {
-      case 'success':
-        color = 0x57f287;
-        break;
-      case 'error':
-        color = 0xed4245;
-        break;
-      case 'warn':
-        color = 0xedb324;
-        break;
-      default:
-        color = 0x7289da;
-    }
+    const colorMap = { success: 0x57f287, error: 0xed4245, warn: 0xedb324, info: 0x7289da };
+    const color = colorMap[type] || colorMap.info;
+
+    const txt = String(message);
+    const safeMessage = txt.length > 4000 ? txt.slice(0, 4000) + '…' : txt;
 
     const embed = new EmbedBuilder()
       .setTitle('Free Games Log')
-      .setDescription(message)
+      .setDescription(safeMessage)
       .setColor(color)
       .setTimestamp();
 
     await channel.send({ embeds: [embed] });
   } catch (err) {
-    console.error('❌ Error enviando log al canal:', err.message);
-    console.log('Mensaje original:', message);
+    console.error('❌ Error enviando log al canal:', err);
   }
 }

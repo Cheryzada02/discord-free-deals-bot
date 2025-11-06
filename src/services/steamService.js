@@ -1,40 +1,67 @@
-import axios from 'axios';
-import { load } from 'cheerio';
+// src/services/steamService.js
 import { config } from '../config.js';
+import { shortPrice } from '../utils.js';
 
-export async function fetchSteamDiscounts(count = 50) {
-  try {
-    const url = `https://store.steampowered.com/search/results/?query&start=0&count=${count}&filter=discounts&format=json`;
-    const res = await axios.get(url, { headers: { 'User-Agent': config.userAgent } });
-    const html = res.data.results_html || '';
+// fetch nativo + fallback
+let fetchFn = globalThis.fetch;
+if (typeof fetchFn !== 'function') {
+  const { default: nodeFetch } = await import('node-fetch');
+  fetchFn = nodeFetch;
+}
 
-    const $ = load(html);
-    const items = [];
+/**
+ * Obtiene juegos en oferta desde "featuredcategories" y filtra por descuento mínimo.
+ * @param {number} minDiscount porcentaje mínimo (e.g., 20)
+ * @param {number} limit tope de items a retornar
+ * Devuelve objetos con imagen y precio formateado.
+ */
+export async function fetchSteamDiscounts(minDiscount = 20, limit = 50) {
+  const url = 'https://store.steampowered.com/api/featuredcategories?cc=us&l=english';
+  const res = await fetchFn(url, {
+    headers: { 'user-agent': config.userAgent }
+  });
+  if (!res.ok) throw new Error(`Steam API ${res.status}`);
 
-    $('.search_result_row').each((i, el) => {
-      const row = $(el);
-      const href = row.attr('href');
-      const title = row.find('.title').text().trim();
-      const discount = row.find('.search_discount').text().trim();
-      const discountPercentMatch = discount.match(/-?\d+%/);
-      const discountPercent = discountPercentMatch ? discountPercentMatch[0] : null;
+  const json = await res.json();
+  // specials.specials_items o specials.items (varía)
+  const specials =
+    json?.specials?.items ||
+    json?.specials?.specials_items ||
+    [];
 
-      const priceFinal = row.find('.search_price_discount_combined .discount_final_price').text().trim();
-      const appid = row.attr('data-ds-appid');
+  const items = [];
+  for (const it of specials) {
+    const appid = it?.id || it?.appid;
+    const title = it?.name;
+    const headerImage = it?.header_image; // imagen grande
+    const url = appid ? `https://store.steampowered.com/app/${appid}` : null;
 
-      items.push({
-        id: appid,
-        title: title,
-        url: href,
-        discountPercent: discountPercent,
-        finalPrice: priceFinal || null,
-        image: row.find('img').attr('src')
-      });
+    const discountPercent = it?.discount_percent ?? it?.discountPercent ?? 0;
+    const originalPriceCents = it?.original_price ?? it?.originalPrice ?? null; // ya viene en centavos
+    const finalPriceCents = it?.final_price ?? it?.finalPrice ?? null;
+
+    if (typeof discountPercent !== 'number' || discountPercent < minDiscount) continue;
+
+    const originalPriceFormatted = shortPrice(originalPriceCents);
+    const finalPriceFormatted = shortPrice(finalPriceCents);
+
+    items.push({
+      id: appid || url,
+      title,
+      url,
+      headerImage,
+      image: headerImage,
+      thumbnail: headerImage,
+      discountPercent,
+      originalPriceCents,
+      finalPriceCents,
+      originalPriceFormatted,
+      finalPriceFormatted,
+      description: null
     });
 
-    return items;
-  } catch (err) {
-    console.error('Steam service error:', err.message);
-    return [];
+    if (items.length >= limit) break;
   }
+
+  return items;
 }
